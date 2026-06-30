@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>M_Viewer V3.03</title>
+<title>M_Viewer V3.04</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -5150,8 +5150,9 @@ const TextSearch = (() => {
   'use strict';
 
   /* ── 定数 ── */
-  const HL_COLOR_NORMAL  = 'rgba(255,220,0,0.45)';   /* 黄: 通常一致 (Acrobat風) */
-  const HL_COLOR_CURRENT = 'rgba(255,115,0,0.60)';   /* オレンジ: 現在位置 */
+  const HL_COLOR_NORMAL  = 'rgba(210,0,0,0.90)';    /* 赤枠: 通常一致 */
+  const HL_COLOR_CURRENT_IN  = 'rgba(210,0,0,1.0)';  /* 現在位置: 内枠(赤) */
+  const HL_COLOR_CURRENT_OUT = 'rgba(255,110,0,1.0)';/* 現在位置: 外枠(オレンジ) */
   const DEBOUNCE_MS = 200;
 
   /* ── 状態 ── */
@@ -5408,10 +5409,8 @@ const TextSearch = (() => {
       const isCur = gi === _curIdx;
 
       /* PDF座標 → canvas座標
-         テキストのベースライン y から上(ascent)・下(descent)を算出:
-           ascent  ≈ h * 0.85  (ベースライン上の高さ)
-           descent ≈ h * 0.20  (ベースライン下のディセンダー)
-         これにより文字全体を自然にカバーする矩形を得る */
+         ascent  ≈ h * 0.85 (ベースライン上)
+         descent ≈ h * 0.20 (ベースライン下) で文字全体をカバー */
       const tl = Utils.pdfToCanvas(m.x,       m.y + m.h * 0.85,  vp.transform);
       const br = Utils.pdfToCanvas(m.x + m.w, m.y - m.h * 0.20,  vp.transform);
 
@@ -5422,8 +5421,22 @@ const TextSearch = (() => {
 
       if (rw < 1 || rh < 1) continue;
 
-      _hlCtx.fillStyle = isCur ? HL_COLOR_CURRENT : HL_COLOR_NORMAL;
-      _hlCtx.fillRect(Math.round(rx), Math.round(ry), Math.ceil(rw), Math.ceil(rh));
+      _hlCtx.lineJoin = 'miter';
+      if (isCur) {
+        /* 現在位置: オレンジ外枠 (3px) + 赤内枠 (2px) で二重枠 */
+        _hlCtx.strokeStyle = HL_COLOR_CURRENT_OUT;
+        _hlCtx.lineWidth   = 3.5;
+        _hlCtx.strokeRect(Math.round(rx) - 1, Math.round(ry) - 1,
+                          Math.ceil(rw)  + 2, Math.ceil(rh)  + 2);
+        _hlCtx.strokeStyle = HL_COLOR_CURRENT_IN;
+        _hlCtx.lineWidth   = 2;
+        _hlCtx.strokeRect(Math.round(rx), Math.round(ry), Math.ceil(rw), Math.ceil(rh));
+      } else {
+        /* 通常一致: 赤枠 2px (塗りなし) */
+        _hlCtx.strokeStyle = HL_COLOR_NORMAL;
+        _hlCtx.lineWidth   = 2;
+        _hlCtx.strokeRect(Math.round(rx), Math.round(ry), Math.ceil(rw), Math.ceil(rh));
+      }
     }
     _hlCtx.restore();
   }
