@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>M_Viewer V5.23</title>
+<title>M_Viewer V5.28</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 /* ════════════════════════════════════════════════════════════
-   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.23 (HUD ORANGE)
+   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.28 (HUD ORANGE)
    Design: 近未来計器盤 / ガラス調 / 高コントラスト / 低疲労
    方針: 全セレクタ互換・JS無変更・状態(hover/active/on/disabled/focus)完全分離
    ════════════════════════════════════════════════════════════ */
@@ -1173,10 +1173,20 @@ button{font-family:inherit}
 #pv-detail-btn{background:var(--srf);color:var(--tx2);border:1.5px solid var(--brd);border-radius:var(--r-s);padding:7px 13px;font-size:13px;cursor:pointer;font-weight:700;touch-action:manipulation;box-shadow:var(--inset-hi);transition:border-color .12s,color .12s,box-shadow .12s;white-space:nowrap;}
 #pv-detail-btn:hover{border-color:var(--brd-hi);color:var(--tx)}
 #pv-detail-btn.on{background:var(--acc-deep);border-color:var(--acc2);color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.4);box-shadow:var(--inset-hi),0 0 12px var(--acc-glow)}
+/* V5.24: 切り出し範囲の手動キャリブレーションUI(詳細番号モードON時のみ表示) */
+#pv-detail-cal{display:none;align-items:center;gap:8px;background:var(--srf);border:1.5px solid var(--brd);border-radius:var(--r-s);padding:4px 8px;box-shadow:var(--inset-hi);}
+#pv-detail-cal.on{display:flex}
+#pv-detail-cal .dc-grp{display:flex;align-items:center;gap:3px;}
+#pv-detail-cal .dc-lbl{color:var(--tx3);font-size:11px;letter-spacing:.04em;margin-right:1px;}
+#pv-detail-cal button{width:24px;height:24px;background:var(--pan2);color:var(--tx);border:1px solid var(--brd);border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation;line-height:1;}
+#pv-detail-cal button:hover{border-color:var(--brd-hi)}
+#pv-detail-cal button:active{opacity:.7}
+#pv-detail-cal span.dc-pct{color:var(--tx2);font-size:12px;font-family:var(--mono);min-width:30px;text-align:center;}
+@media(pointer:coarse){#pv-detail-cal button{width:30px;height:30px;font-size:16px}}
 .pv-item{position:relative}
 /* V5.20: 詳細番号モード — ページ全体はそのまま、右下だけをピクチャーインピクチャーで拡大表示 */
 .pv-thumb{position:relative;width:100%;}
-.pv-inset{position:absolute;right:0;bottom:0;width:25%;height:25%;object-fit:fill;border:2px solid var(--acc);border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,.65),0 0 0 1px rgba(0,0,0,.35);pointer-events:none;z-index:1;}
+.pv-inset{position:absolute;right:0;bottom:0;object-fit:fill;border:2px solid var(--acc);border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,.65),0 0 0 1px rgba(0,0,0,.35);pointer-events:none;z-index:1;} /* V5.25: 表示サイズは縮小防止のためJSでinline指定 */
 .pv-star{position:absolute;top:6px;right:6px;z-index:2;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:19px;line-height:1;color:var(--tx3);background:rgba(11,6,3,.55);border:1px solid var(--brd);border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:color .12s,border-color .12s,box-shadow .12s;}
 .pv-star:hover{color:var(--tx2);border-color:var(--brd-hi)}
 .pv-star.on{color:var(--acc);border-color:var(--acc);text-shadow:0 0 8px var(--acc-glow);box-shadow:0 0 8px rgba(255,138,30,.25)}
@@ -1297,7 +1307,7 @@ button{font-family:inherit}
 </div>
 <div id="hdr">
   <div class="hr">
-    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.23</span></span>
+    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.28</span></span>
     <input type="file" id="fileInput" accept="application/pdf" style="display:none">
     <span id="fnlbl">ファイル未選択</span>
     <div class="vs"></div>
@@ -1434,7 +1444,7 @@ button{font-family:inherit}
   </div>
   <div id="dz">
     <div class="dzi">📄</div>
-    <div class="dzm">M_Viewer V5.23</div>
+    <div class="dzm">M_Viewer V5.28</div>
     <div class="dzs">タップして選択 / ドラッグ＆ドロップ<br>ペン・蛍光ペン: Apple Pencil専用<br>その他ツール・スクロール: 指でも操作可<br>2本指でピンチ拡大縮小 (最大800%)</div>
     <button class="dzb" id="dz-open">PDFを開く</button>
   </div>
@@ -1531,6 +1541,11 @@ button{font-family:inherit}
     <span style="flex:1"></span>
     <button id="pv-fav-btn" title="お気に入りのみ表示">★のみ</button>
     <button id="pv-detail-btn" title="右下(詳細番号欄)を拡大表示">詳細番号モード</button><!-- V5.19 -->
+    <span id="pv-detail-cal"><!-- V5.28: 切り出し範囲(幅・高さ)+倍率を個別に手動調整(その場で±→自動記憶) -->
+      <span class="dc-grp"><span class="dc-lbl">幅</span><button id="pv-detail-w-minus">－</button><span id="pv-detail-w-pct" class="dc-pct">25%</span><button id="pv-detail-w-plus">＋</button></span>
+      <span class="dc-grp"><span class="dc-lbl">高さ</span><button id="pv-detail-h-minus">－</button><span id="pv-detail-h-pct" class="dc-pct">14%</span><button id="pv-detail-h-plus">＋</button></span>
+      <span class="dc-grp"><span class="dc-lbl">倍率</span><button id="pv-detail-z-minus">－</button><span id="pv-detail-z-pct" class="dc-pct">2.2x</span><button id="pv-detail-z-plus">＋</button></span>
+    </span>
     <button id="pv-close">閉じる</button>
   </div>
   <div id="pv-body">
@@ -1561,7 +1576,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
      2. ファイル名 M_Viewer_vN.html を更新
    それ以外 (meta.json / console / title / dzm / ロゴ左上) は自動反映。
    ============================================================ */
-const APP_VER='V5.23'; /* ← ★ バージョンアップ時はここだけ変える */
+const APP_VER='V5.28'; /* ← ★ バージョンアップ時はここだけ変える */
 
 /* v29: PDF_MAX_DPR を 1.5 → 2.0 に変更
    iPad Retina(DPR=2): canvas物理px = CSS px × 2 = 画面物理px → 完全1:1 → ぼやけ解消
@@ -2013,12 +2028,26 @@ const PreviewPanel=(() => {
   let _fav={};          /* docKey → [page,…] */
   let _favOnly=false;
   let _detailMode=false; /* V5.20: 詳細番号モード(右下ピクチャーインピクチャー拡大) */
-  /* V5.23: ご指定により切り出し範囲を10%へ拡大。表示枠は25%を維持するため倍率を2.5倍に自動調整 */
-  const DETAIL_SRC_FRAC_W=0.10;    /* 右下から切り出す幅の割合(10%) */
-  const DETAIL_SRC_FRAC_H=0.10;    /* 右下から切り出す高さの割合(10%) */
-  const DETAIL_ZOOM=2.5;           /* 拡大倍率(2.5倍) */
-  const DETAIL_DISP_FRAC_W=DETAIL_SRC_FRAC_W*DETAIL_ZOOM; /* サムネイル内での表示幅割合(=25%) */
-  const DETAIL_DISP_FRAC_H=DETAIL_SRC_FRAC_H*DETAIL_ZOOM; /* サムネイル内での表示高さ割合(=25%) */
+  /* V5.26: タイトル欄は正方形とは限らず、幅25%×高さ13%前後の横長帯であることが実図面で判明。
+     幅・高さを別々に+/-調整→localStorageへ自動記憶。図面テンプレートは会社ごとに固定のため、
+     一度合わせれば以降ずっと使い回せる。表示は固定倍率(ZOOM)で拡大し、大きくなり過ぎる場合のみ
+     縦横比を保ったまま自動で縮小補正する(はみ出し防止)。 */
+  const DETAIL_CAL_KEY_W='mv_detail_frac_w',DETAIL_CAL_KEY_H='mv_detail_frac_h';
+  const DETAIL_FRAC_MIN=0.03,DETAIL_FRAC_MAX=0.70,DETAIL_FRAC_STEP=0.02;
+  const DETAIL_CAL_KEY_Z='mv_detail_zoom';
+  const DETAIL_ZOOM_MIN=1.0,DETAIL_ZOOM_MAX=6.0,DETAIL_ZOOM_STEP=0.2;
+  const DETAIL_DISP_MAX=0.62;      /* 表示サイズの上限(サムネイルを覆い過ぎないように) */
+  let _detailFracW=0.25,_detailFracH=0.14; /* 実測(2階大梁加工図)に基づく初期値 */
+  let _detailZoom=2.2;             /* V5.28: 拡大倍率も可変に(初期値2.2倍) */
+  try{const vw=parseFloat(localStorage.getItem(DETAIL_CAL_KEY_W));if(vw>=DETAIL_FRAC_MIN&&vw<=DETAIL_FRAC_MAX)_detailFracW=vw;}catch(_){}
+  try{const vh=parseFloat(localStorage.getItem(DETAIL_CAL_KEY_H));if(vh>=DETAIL_FRAC_MIN&&vh<=DETAIL_FRAC_MAX)_detailFracH=vh;}catch(_){}
+  try{const vz=parseFloat(localStorage.getItem(DETAIL_CAL_KEY_Z));if(vz>=DETAIL_ZOOM_MIN&&vz<=DETAIL_ZOOM_MAX)_detailZoom=vz;}catch(_){}
+  function _detailDispFracs(){
+    let dw=_detailFracW*_detailZoom,dh=_detailFracH*_detailZoom;
+    const m=Math.max(dw,dh);
+    if(m>DETAIL_DISP_MAX){const k=DETAIL_DISP_MAX/m;dw*=k;dh*=k;} /* 縦横比を保ったまま上限内に収める */
+    return{w:dw,h:dh};
+  }
   let _insetCache={},_insetSig={}; /* 拡大インセット専用キャッシュ(通常サムネイルとは別管理) */
   try{const d=JSON.parse(localStorage.getItem(FAV_KEY));if(d&&typeof d==='object')_fav=d;}catch(_){}
   function _favSave(){try{localStorage.setItem(FAV_KEY,JSON.stringify(_fav));}catch(_){}}
@@ -2088,30 +2117,39 @@ const PreviewPanel=(() => {
   }
 
   async function _renderDetailInset(pageNum){
-    /* V5.20: 右下領域だけを高解像度で切り出す。SubWinと同じoffset viewport手法を流用。
-       通常サムネイルの解像度には依存しない別レンダリングのため、拡大しても高画質。 */
+    /* V5.27: 回転ページで座標がずれるバグを修正。
+       offsetX/offsetY付きviewportは回転ページで変換式が変わり右下がずれるため廃止。
+       代わりに「通常どおり全体を描画→canvasの標準的な矩形切り出し(drawImage)で右下だけ取り出す」
+       方式に変更。getViewport({scale})の結果は既存の全体表示・サムネイルと同じく回転を
+       自動的に正しく処理するため、切り出し元の「右下」は常にfullCvsの右下端と一致し安全。 */
     const pd=App.pdfDoc;if(!pd)return null;
     if(_lastDoc!==pd){_insetCache={};_insetSig={};}
-    const sig=_strokeSig(pageNum);
+    const sig=_strokeSig(pageNum)+':'+_detailFracW.toFixed(3)+':'+_detailFracH.toFixed(3);
     if(_insetCache[pageNum]&&_insetSig[pageNum]===sig)return _insetCache[pageNum];
     try{
       const page=await pd.getPage(pageNum);
-      const full=page.getViewport({scale:1});
-      const cropW=full.width*DETAIL_SRC_FRAC_W,cropH=full.height*DETAIL_SRC_FRAC_H;
+      const full=page.getViewport({scale:1}); /* 回転補正済みの表示上サイズ */
+      const cropW=full.width*_detailFracW,cropH=full.height*_detailFracH;
       const OVERSAMPLE=2; /* 高画質化のための追加解像度係数 */
-      const rasterW=Math.round(_THUMB_W*DETAIL_DISP_FRAC_W*OVERSAMPLE);
-      const sc=rasterW/cropW;
-      const ox=full.width-cropW,oy=full.height-cropH; /* 右下基準の切り出し原点(サイズ・回転に依らず成立) */
-      const vp=page.getViewport({scale:sc,offsetX:-ox*sc,offsetY:-oy*sc});
+      const disp=_detailDispFracs();
+      const rasterW=Math.round(_THUMB_W*disp.w*OVERSAMPLE);
+      const sc=rasterW/cropW; /* このスケールでページ全体を描けば、クロップ領域の幅がrasterWになる */
+      const vp=page.getViewport({scale:sc}); /* オフセットなし。回転はPDF.js側で自動処理される */
+      const fullCvs=document.createElement('canvas');
+      fullCvs.width=Math.round(vp.width);fullCvs.height=Math.round(vp.height);
+      await page.render({canvasContext:fullCvs.getContext('2d'),viewport:vp}).promise;
+      const cw=Math.round(cropW*sc),ch=Math.round(cropH*sc);
+      const sx=fullCvs.width-cw,sy=fullCvs.height-ch; /* 常にfullCvsの右下端が基準(回転に依らず正しい) */
       const cvs=document.createElement('canvas');
-      cvs.width=Math.round(vp.width);cvs.height=Math.round(vp.height);
-      await page.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
+      cvs.width=cw;cvs.height=ch;
+      const cctx=cvs.getContext('2d');
+      cctx.drawImage(fullCvs,sx,sy,cw,ch,0,0,cw,ch);
       const arr=(App.strokes&&App.strokes[pageNum])||[];
       if(arr.length){
-        const ann=document.createElement('canvas');
-        ann.width=cvs.width;ann.height=cvs.height;
-        DrawUtil.drawAnnotations(ann.getContext('2d'),arr,vp.transform);
-        cvs.getContext('2d').drawImage(ann,0,0);
+        const annFull=document.createElement('canvas');
+        annFull.width=fullCvs.width;annFull.height=fullCvs.height;
+        DrawUtil.drawAnnotations(annFull.getContext('2d'),arr,vp.transform);
+        cctx.drawImage(annFull,sx,sy,cw,ch,0,0,cw,ch);
       }
       const url=cvs.toDataURL('image/jpeg',.82);
       _insetCache[pageNum]=url;_insetSig[pageNum]=sig;return url;
@@ -2182,6 +2220,8 @@ const PreviewPanel=(() => {
           if(iurl&&wrap&&wrap.isConnected&&ov.classList.contains('on')){
             const ins=document.createElement('img');
             ins.src=iurl;ins.className='pv-inset';ins.draggable=false;
+            const disp=_detailDispFracs(); /* V5.26: 幅・高さ別の実表示割合 */
+            ins.style.width=(disp.w*100)+'%';ins.style.height=(disp.h*100)+'%';
             wrap.appendChild(ins);
           }
         }
@@ -2214,11 +2254,45 @@ const PreviewPanel=(() => {
 
   /* V5.19: 詳細番号モード切替(グリッド再構築→サムネ再読込で即時反映。ページ送り後もモード保持) */
   const _detailBtn=document.getElementById('pv-detail-btn');
+  const _calEl=document.getElementById('pv-detail-cal');
+  const _wPctEl=document.getElementById('pv-detail-w-pct');
+  const _hPctEl=document.getElementById('pv-detail-h-pct');
+  const _zPctEl=document.getElementById('pv-detail-z-pct');
+  function _updateDetailPct(){
+    if(_wPctEl)_wPctEl.textContent=Math.round(_detailFracW*100)+'%';
+    if(_hPctEl)_hPctEl.textContent=Math.round(_detailFracH*100)+'%';
+    if(_zPctEl)_zPctEl.textContent=_detailZoom.toFixed(1)+'x';
+  }
+  _updateDetailPct();
   if(_detailBtn)_detailBtn.addEventListener('click',()=>{
     _detailMode=!_detailMode;
     _detailBtn.classList.toggle('on',_detailMode);
+    if(_calEl)_calEl.classList.toggle('on',_detailMode); /* V5.24: ON時だけ±調整を表示 */
     _buildGrid();_loadThumbs();
   },{passive:true});
+  /* V5.26: 幅・高さそれぞれの±調整(即時反映+自動記憶) */
+  function _adjustDetailFracW(delta){
+    _detailFracW=Math.max(DETAIL_FRAC_MIN,Math.min(DETAIL_FRAC_MAX,_detailFracW+delta));
+    try{localStorage.setItem(DETAIL_CAL_KEY_W,String(_detailFracW));}catch(_){}
+    _updateDetailPct();_buildGrid();_loadThumbs();
+  }
+  function _adjustDetailFracH(delta){
+    _detailFracH=Math.max(DETAIL_FRAC_MIN,Math.min(DETAIL_FRAC_MAX,_detailFracH+delta));
+    try{localStorage.setItem(DETAIL_CAL_KEY_H,String(_detailFracH));}catch(_){}
+    _updateDetailPct();_buildGrid();_loadThumbs();
+  }
+  document.getElementById('pv-detail-w-minus')?.addEventListener('click',()=>_adjustDetailFracW(-DETAIL_FRAC_STEP),{passive:true});
+  document.getElementById('pv-detail-w-plus')?.addEventListener('click',()=>_adjustDetailFracW(DETAIL_FRAC_STEP),{passive:true});
+  document.getElementById('pv-detail-h-minus')?.addEventListener('click',()=>_adjustDetailFracH(-DETAIL_FRAC_STEP),{passive:true});
+  document.getElementById('pv-detail-h-plus')?.addEventListener('click',()=>_adjustDetailFracH(DETAIL_FRAC_STEP),{passive:true});
+  /* V5.28: 拡大倍率の±調整(即時反映+自動記憶) */
+  function _adjustDetailZoom(delta){
+    _detailZoom=Math.max(DETAIL_ZOOM_MIN,Math.min(DETAIL_ZOOM_MAX,+(_detailZoom+delta).toFixed(2)));
+    try{localStorage.setItem(DETAIL_CAL_KEY_Z,String(_detailZoom));}catch(_){}
+    _updateDetailPct();_buildGrid();_loadThumbs();
+  }
+  document.getElementById('pv-detail-z-minus')?.addEventListener('click',()=>_adjustDetailZoom(-DETAIL_ZOOM_STEP),{passive:true});
+  document.getElementById('pv-detail-z-plus')?.addEventListener('click',()=>_adjustDetailZoom(DETAIL_ZOOM_STEP),{passive:true});
 
   return{open,close};
 })();
