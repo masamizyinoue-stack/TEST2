@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>M_Viewer V5.02</title>
+<title>M_Viewer V5.03</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 /* ════════════════════════════════════════════════════════════
-   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.02
+   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.03
    Design: 近未来計器盤 / ガラス調 / 高コントラスト / 低疲労
    方針: 全セレクタ互換・JS無変更・状態(hover/active/on/disabled/focus)完全分離
    ════════════════════════════════════════════════════════════ */
@@ -1255,7 +1255,7 @@ button{font-family:inherit}
 </div>
 <div id="hdr">
   <div class="hr">
-    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.02</span></span>
+    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.03</span></span>
     <input type="file" id="fileInput" accept="application/pdf" style="display:none">
     <span id="fnlbl">ファイル未選択</span>
     <div class="vs"></div>
@@ -1386,7 +1386,7 @@ button{font-family:inherit}
   </div>
   <div id="dz">
     <div class="dzi">📄</div>
-    <div class="dzm">M_Viewer V5.02</div>
+    <div class="dzm">M_Viewer V5.03</div>
     <div class="dzs">タップして選択 / ドラッグ＆ドロップ<br>ペン・蛍光ペン: Apple Pencil専用<br>その他ツール・スクロール: 指でも操作可<br>2本指でピンチ拡大縮小 (最大800%)</div>
     <button class="dzb" id="dz-open">PDFを開く</button>
   </div>
@@ -1510,7 +1510,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
      2. ファイル名 M_Viewer_vN.html を更新
    それ以外 (meta.json / console / title / dzm / ロゴ左上) は自動反映。
    ============================================================ */
-const APP_VER='V5.02'; /* ← ★ バージョンアップ時はここだけ変える */
+const APP_VER='V5.03'; /* ← ★ バージョンアップ時はここだけ変える */
 
 /* v29: PDF_MAX_DPR を 1.5 → 2.0 に変更
    iPad Retina(DPR=2): canvas物理px = CSS px × 2 = 画面物理px → 完全1:1 → ぼやけ解消
@@ -1520,6 +1520,7 @@ const APP_VER='V5.02'; /* ← ★ バージョンアップ時はここだけ変�
    3600 は安定実績があり、cssExtraZoom=1.87(800%)程度で許容範囲
    低倍率(100-200%)は PDF_MAX_DPR=2.0 で v28 より高品質を維持 */
 const MAX_CANVAS=3600,MAX_SCALE=8,SAVE_DELAY=1200,PDF_MAX_DPR=2.0;
+const HI_DPR=Math.min(window.devicePixelRatio||1,2); /* V5.03: 書込みレイヤ・サブ窓用DPR(Retina対応) */
 const MAX_SUBWIN=2,MAX_STROKES_PER_PAGE=500;
 const SW_COLORS=['#f07800','#00a0ff','#00c060','#ff40a0','#c0c000'];
 const SW_FILLS=['rgba(240,120,0,.12)','rgba(0,160,255,.12)','rgba(0,200,80,.12)','rgba(255,80,160,.12)','rgba(200,200,0,.12)'];
@@ -2380,7 +2381,7 @@ const SubWinManager=(() => {
       if(!sw._pdfCache)return; /* PDFキャッシュなければスキップ */
       sw._annDirty=true;
       /* annotation canvas のみ再描画 (PDF部分はキャッシュ使用) */
-      const vp=sw._vp;
+      const vp=sw._hvp||sw._vp; /* V5.03①': 描画は高解像度VP */
       if(!vp)return;
       if(!sw._annCvs||sw._annCvs.width!==vp.width||sw._annCvs.height!==vp.height){
         if(!sw._annCvs)sw._annCvs=document.createElement('canvas');
@@ -2488,30 +2489,32 @@ class SubWin{
     }
     const page=this._pageObj;
     const vp=page.getViewport({scale:sc});
-    this._vp=vp; /* v6: PDF座標変換用 */
+    this._vp=vp; /* v6: PDF座標変換用(座標計算は従来通りCSS基準) */
+    const hvp=page.getViewport({scale:sc*HI_DPR}); /* V5.03①': 描画専用の高解像度VP */
+    this._hvp=hvp;
     if(!this._pdfCache||this._pdfCacheSc!==sc||this._pdfCachePg!==this.pageNum){
       /* _pdfCache再利用: 毎回createElement不要 → Canvas生成回数削減 */
       if(!this._pdfCache){this._pdfCache=document.createElement('canvas');}
-      if(this._pdfCache.width!==vp.width||this._pdfCache.height!==vp.height){
-        this._pdfCache.width=vp.width;this._pdfCache.height=vp.height;
+      if(this._pdfCache.width!==hvp.width||this._pdfCache.height!==hvp.height){
+        this._pdfCache.width=hvp.width;this._pdfCache.height=hvp.height;
       }
-      const c=this._pdfCache.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,vp.width,vp.height);
-      await page.render({canvasContext:c,viewport:vp}).promise;
+      const c=this._pdfCache.getContext('2d');c.fillStyle='#fff';c.fillRect(0,0,hvp.width,hvp.height);
+      await page.render({canvasContext:c,viewport:hvp}).promise; /* V5.03①': 高解像度で描画 */
       this._pdfCacheSc=sc;this._pdfCachePg=this.pageNum;
     }
-    if(this._annDirty||!this._annCvs||this._annCvs.width!==vp.width||this._annCvs.height!==vp.height){
+    if(this._annDirty||!this._annCvs||this._annCvs.width!==hvp.width||this._annCvs.height!==hvp.height){
       if(!this._annCvs)this._annCvs=document.createElement('canvas');
-      this._annCvs.width=vp.width;this._annCvs.height=vp.height;
-      const ac=this._annCvs.getContext('2d');ac.clearRect(0,0,vp.width,vp.height);
-      DrawUtil.drawAnnotations(ac,this.strokes[this.pageNum]||[],vp.transform);
+      this._annCvs.width=hvp.width;this._annCvs.height=hvp.height;
+      const ac=this._annCvs.getContext('2d');ac.clearRect(0,0,hvp.width,hvp.height);
+      DrawUtil.drawAnnotations(ac,this.strokes[this.pageNum]||[],hvp.transform); /* V5.03①' */
       this._annDirty=false;
     }
     if(ver!==this._renderVer)return;
     /* cvs.width代入はGPUテクスチャリセットを発生させるため、サイズ変化時のみ実行 */
-    if(this.cvs.width!==vp.width||this.cvs.height!==vp.height){
-      this.cvs.width=vp.width;this.cvs.height=vp.height;
-      this.cvs.style.width=vp.width+'px';this.cvs.style.height=vp.height+'px';
-    }else{this.ctx.clearRect(0,0,vp.width,vp.height);}
+    if(this.cvs.width!==hvp.width||this.cvs.height!==hvp.height){
+      this.cvs.width=hvp.width;this.cvs.height=hvp.height;
+      this.cvs.style.width=vp.width+'px';this.cvs.style.height=vp.height+'px'; /* V5.03①': 表示サイズは従来通りCSS px */
+    }else{this.ctx.clearRect(0,0,hvp.width,hvp.height);}
     this.ctx.drawImage(this._pdfCache,0,0);
     this.ctx.drawImage(this._annCvs,0,0);
     this._updateTransform();
@@ -2597,7 +2600,7 @@ class SubWin{
     }
     if(!this.curStroke)return;
     const p=this._toPdfPos(t),s=this.curStroke,sc=this.innerScale;
-    if(['pen','hl'].includes(s.type)){s.points.push([p.x,p.y]);if(this._vp)DrawUtil.drawLivePen(this.ctx,s,this._vp.transform);this.lastX=p.x;this.lastY=p.y;}
+    if(['pen','hl'].includes(s.type)){s.points.push([p.x,p.y]);if(this._vp)DrawUtil.drawLivePen(this.ctx,s,(this._hvp||this._vp).transform); /* V5.03①' */this.lastX=p.x;this.lastY=p.y;}
     else if(s.type==='eraser'){
       s.points.push([p.x,p.y]);this.lastX=p.x;this.lastY=p.y;
       const br=this._bodyRect();
@@ -3025,7 +3028,8 @@ const App=(() => {
       if(ver!==renderVer)return;
       pdfCvs.width=hiVP.width;pdfCvs.height=hiVP.height;
       pdfCvs.style.width=vp.width+'px';pdfCvs.style.height=vp.height+'px';
-      [annCvs,ovlCvs].forEach(c=>{c.width=vp.width;c.height=vp.height;});
+      /* V5.03①: 書込みレイヤDPR対応。座標系はCSS pxのまま基底transformで吸収 */
+      [annCvs,ovlCvs].forEach(c=>{c.width=Math.round(vp.width*HI_DPR);c.height=Math.round(vp.height*HI_DPR);c.style.width=vp.width+'px';c.style.height=vp.height+'px';c.getContext('2d').setTransform(HI_DPR,0,0,HI_DPR,0,0);});
       _updContSize();
       pdfCtx.imageSmoothingEnabled=true;pdfCtx.imageSmoothingQuality='high'; /* v29: 維持 */
       pdfCtx.drawImage(_offscr,0,0);
@@ -3573,7 +3577,7 @@ const App=(() => {
     ]);
     Logger.info('[closeFile] resume keys cleared, file='+_closingFile);
     pdfDoc=null;origBuf=null;fileName='';curPage=1;totalPages=0;strokes={};_docId=null;
-    [pdfCvs,annCvs,ovlCvs].forEach(c=>{c.width=1;c.height=1;});
+    [pdfCvs,annCvs,ovlCvs].forEach(c=>{c.width=1;c.height=1;c.style.width='';c.style.height='';}); /* V5.03 */
     cwEl.style.display='none';
     _showHome();
     document.getElementById('fnlbl').textContent='ファイル未選択';
@@ -3859,7 +3863,7 @@ const App=(() => {
     document.getElementById('tpn').textContent=totalPages||'0';
     document.getElementById('pgn').value=curPage;
     if(pdfDoc){document.getElementById('dz').style.display='none';cwEl.style.display='block';await renderPage(curPage);}
-    else{_showHome();cwEl.style.display='none';document.getElementById('zlbl').textContent='--';[pdfCvs,annCvs,ovlCvs].forEach(c=>{c.width=1;c.height=1;});}
+    else{_showHome();cwEl.style.display='none';document.getElementById('zlbl').textContent='--';[pdfCvs,annCvs,ovlCvs].forEach(c=>{c.width=1;c.height=1;c.style.width='';c.style.height='';});} /* V5.03 */
   }
 
   /* --- 自動保存ゲッター --- */
@@ -5638,7 +5642,7 @@ const TextSearch = (() => {
       _curIdx  = -1;
       _updateCount();
       if (_hlCvs && _hlCtx) _hlCtx.clearRect(0, 0, _hlCvs.width, _hlCvs.height);
-      _closeList(); /* V5.02: 0文字で候補一覧を自動クローズ */
+      _closeList(); /* V5.03: 0文字で候補一覧を自動クローズ */
       return;
     }
     if (!_idx[App.currentPage]) {
@@ -5651,7 +5655,7 @@ const TextSearch = (() => {
     _updateCount();
     _syncHlCanvas();
     _drawHighlights().catch(() => {});
-    _openList(); /* V5.02: 入力1文字以上で候補一覧を自動表示・リアルタイム更新 */
+    _openList(); /* V5.03: 入力1文字以上で候補一覧を自動表示・リアルタイム更新 */
   }
 
   /* ════════════════════════════════════════════════════════
@@ -5695,7 +5699,7 @@ const TextSearch = (() => {
     if (!_listPopEl) return;
     _updateListPop();
     _listPopEl.classList.add('on');
-    /* V5.02: 検索入力欄の左下(左寄せ)に表示。画面外へのはみ出しを補正 */
+    /* V5.03: 検索入力欄の左下(左寄せ)に表示。画面外へのはみ出しを補正 */
     const anc = _inputEl ? _inputEl.getBoundingClientRect() : null;
     const ax  = anc ? anc.left : 8;
     const ay  = anc ? anc.bottom + 4 : 46;
@@ -5753,7 +5757,7 @@ const TextSearch = (() => {
 
     document.addEventListener('pointerdown', e => {
       if (!_listPopEl || !_listPopEl.classList.contains('on')) return;
-      if (!_listPopEl.contains(e.target) && e.target !== _inputEl) _closeList(); /* V5.02: 一覧ボタン廃止に伴い判定変更 */
+      if (!_listPopEl.contains(e.target) && e.target !== _inputEl) _closeList(); /* V5.03: 一覧ボタン廃止に伴い判定変更 */
     }, { capture: true, passive: true });
 
     const pdfCvs = document.getElementById('pdfCvs');
