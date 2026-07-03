@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>M_Viewer V5.18</title>
+<title>M_Viewer V5.23</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 /* ════════════════════════════════════════════════════════════
-   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.18 (HUD ORANGE)
+   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.23 (HUD ORANGE)
    Design: 近未来計器盤 / ガラス調 / 高コントラスト / 低疲労
    方針: 全セレクタ互換・JS無変更・状態(hover/active/on/disabled/focus)完全分離
    ════════════════════════════════════════════════════════════ */
@@ -1169,7 +1169,14 @@ button{font-family:inherit}
 #pv-fav-btn{background:var(--srf);color:var(--tx2);border:1.5px solid var(--brd);border-radius:var(--r-s);padding:7px 13px;font-size:13px;cursor:pointer;font-weight:700;touch-action:manipulation;box-shadow:var(--inset-hi);transition:border-color .12s,color .12s,box-shadow .12s;white-space:nowrap;}
 #pv-fav-btn:hover{border-color:var(--brd-hi);color:var(--tx)}
 #pv-fav-btn.on{background:var(--acc-deep);border-color:var(--acc2);color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.4);box-shadow:var(--inset-hi),0 0 12px var(--acc-glow)}
+/* V5.19: 詳細番号モード(★のみと同じボタン意匠を流用) */
+#pv-detail-btn{background:var(--srf);color:var(--tx2);border:1.5px solid var(--brd);border-radius:var(--r-s);padding:7px 13px;font-size:13px;cursor:pointer;font-weight:700;touch-action:manipulation;box-shadow:var(--inset-hi);transition:border-color .12s,color .12s,box-shadow .12s;white-space:nowrap;}
+#pv-detail-btn:hover{border-color:var(--brd-hi);color:var(--tx)}
+#pv-detail-btn.on{background:var(--acc-deep);border-color:var(--acc2);color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.4);box-shadow:var(--inset-hi),0 0 12px var(--acc-glow)}
 .pv-item{position:relative}
+/* V5.20: 詳細番号モード — ページ全体はそのまま、右下だけをピクチャーインピクチャーで拡大表示 */
+.pv-thumb{position:relative;width:100%;}
+.pv-inset{position:absolute;right:0;bottom:0;width:25%;height:25%;object-fit:fill;border:2px solid var(--acc);border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,.65),0 0 0 1px rgba(0,0,0,.35);pointer-events:none;z-index:1;}
 .pv-star{position:absolute;top:6px;right:6px;z-index:2;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:19px;line-height:1;color:var(--tx3);background:rgba(11,6,3,.55);border:1px solid var(--brd);border-radius:8px;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none;transition:color .12s,border-color .12s,box-shadow .12s;}
 .pv-star:hover{color:var(--tx2);border-color:var(--brd-hi)}
 .pv-star.on{color:var(--acc);border-color:var(--acc);text-shadow:0 0 8px var(--acc-glow);box-shadow:0 0 8px rgba(255,138,30,.25)}
@@ -1290,7 +1297,7 @@ button{font-family:inherit}
 </div>
 <div id="hdr">
   <div class="hr">
-    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.18</span></span>
+    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.23</span></span>
     <input type="file" id="fileInput" accept="application/pdf" style="display:none">
     <span id="fnlbl">ファイル未選択</span>
     <div class="vs"></div>
@@ -1427,7 +1434,7 @@ button{font-family:inherit}
   </div>
   <div id="dz">
     <div class="dzi">📄</div>
-    <div class="dzm">M_Viewer V5.18</div>
+    <div class="dzm">M_Viewer V5.23</div>
     <div class="dzs">タップして選択 / ドラッグ＆ドロップ<br>ペン・蛍光ペン: Apple Pencil専用<br>その他ツール・スクロール: 指でも操作可<br>2本指でピンチ拡大縮小 (最大800%)</div>
     <button class="dzb" id="dz-open">PDFを開く</button>
   </div>
@@ -1523,6 +1530,7 @@ button{font-family:inherit}
     <span id="pv-title">ページ一覧</span>
     <span style="flex:1"></span>
     <button id="pv-fav-btn" title="お気に入りのみ表示">★のみ</button>
+    <button id="pv-detail-btn" title="右下(詳細番号欄)を拡大表示">詳細番号モード</button><!-- V5.19 -->
     <button id="pv-close">閉じる</button>
   </div>
   <div id="pv-body">
@@ -1553,7 +1561,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
      2. ファイル名 M_Viewer_vN.html を更新
    それ以外 (meta.json / console / title / dzm / ロゴ左上) は自動反映。
    ============================================================ */
-const APP_VER='V5.18'; /* ← ★ バージョンアップ時はここだけ変える */
+const APP_VER='V5.23'; /* ← ★ バージョンアップ時はここだけ変える */
 
 /* v29: PDF_MAX_DPR を 1.5 → 2.0 に変更
    iPad Retina(DPR=2): canvas物理px = CSS px × 2 = 画面物理px → 完全1:1 → ぼやけ解消
@@ -2004,6 +2012,14 @@ const PreviewPanel=(() => {
   const FAV_KEY='mv_pagefav';
   let _fav={};          /* docKey → [page,…] */
   let _favOnly=false;
+  let _detailMode=false; /* V5.20: 詳細番号モード(右下ピクチャーインピクチャー拡大) */
+  /* V5.23: ご指定により切り出し範囲を10%へ拡大。表示枠は25%を維持するため倍率を2.5倍に自動調整 */
+  const DETAIL_SRC_FRAC_W=0.10;    /* 右下から切り出す幅の割合(10%) */
+  const DETAIL_SRC_FRAC_H=0.10;    /* 右下から切り出す高さの割合(10%) */
+  const DETAIL_ZOOM=2.5;           /* 拡大倍率(2.5倍) */
+  const DETAIL_DISP_FRAC_W=DETAIL_SRC_FRAC_W*DETAIL_ZOOM; /* サムネイル内での表示幅割合(=25%) */
+  const DETAIL_DISP_FRAC_H=DETAIL_SRC_FRAC_H*DETAIL_ZOOM; /* サムネイル内での表示高さ割合(=25%) */
+  let _insetCache={},_insetSig={}; /* 拡大インセット専用キャッシュ(通常サムネイルとは別管理) */
   try{const d=JSON.parse(localStorage.getItem(FAV_KEY));if(d&&typeof d==='object')_fav=d;}catch(_){}
   function _favSave(){try{localStorage.setItem(FAV_KEY,JSON.stringify(_fav));}catch(_){}}
   function _docKey(){return App.docId||('fn:'+(App.fileName||''));}
@@ -2071,6 +2087,37 @@ const PreviewPanel=(() => {
     }catch(_e){return null;}
   }
 
+  async function _renderDetailInset(pageNum){
+    /* V5.20: 右下領域だけを高解像度で切り出す。SubWinと同じoffset viewport手法を流用。
+       通常サムネイルの解像度には依存しない別レンダリングのため、拡大しても高画質。 */
+    const pd=App.pdfDoc;if(!pd)return null;
+    if(_lastDoc!==pd){_insetCache={};_insetSig={};}
+    const sig=_strokeSig(pageNum);
+    if(_insetCache[pageNum]&&_insetSig[pageNum]===sig)return _insetCache[pageNum];
+    try{
+      const page=await pd.getPage(pageNum);
+      const full=page.getViewport({scale:1});
+      const cropW=full.width*DETAIL_SRC_FRAC_W,cropH=full.height*DETAIL_SRC_FRAC_H;
+      const OVERSAMPLE=2; /* 高画質化のための追加解像度係数 */
+      const rasterW=Math.round(_THUMB_W*DETAIL_DISP_FRAC_W*OVERSAMPLE);
+      const sc=rasterW/cropW;
+      const ox=full.width-cropW,oy=full.height-cropH; /* 右下基準の切り出し原点(サイズ・回転に依らず成立) */
+      const vp=page.getViewport({scale:sc,offsetX:-ox*sc,offsetY:-oy*sc});
+      const cvs=document.createElement('canvas');
+      cvs.width=Math.round(vp.width);cvs.height=Math.round(vp.height);
+      await page.render({canvasContext:cvs.getContext('2d'),viewport:vp}).promise;
+      const arr=(App.strokes&&App.strokes[pageNum])||[];
+      if(arr.length){
+        const ann=document.createElement('canvas');
+        ann.width=cvs.width;ann.height=cvs.height;
+        DrawUtil.drawAnnotations(ann.getContext('2d'),arr,vp.transform);
+        cvs.getContext('2d').drawImage(ann,0,0);
+      }
+      const url=cvs.toDataURL('image/jpeg',.82);
+      _insetCache[pageNum]=url;_insetSig[pageNum]=sig;return url;
+    }catch(_e){return null;}
+  }
+
   function _buildGrid(){
     const total=App.totalPages,cur=App.currentPage;
     const grid=document.getElementById('pv-grid');
@@ -2083,7 +2130,9 @@ const PreviewPanel=(() => {
       const item=document.createElement('div');
       item.className='pv-item'+(n===cur?' pv-active':'')+(favs.has(n)?' pv-fav':'');
       item.dataset.page=n;
+      const thumbWrap=document.createElement('div');thumbWrap.className='pv-thumb'; /* V5.20 */
       const ph=document.createElement('div');ph.className='pv-ph';ph.dataset.page=n;ph.textContent='…';
+      thumbWrap.appendChild(ph);
       const pg=document.createElement('span');pg.className='pv-pg';pg.textContent=n+'ページ';
       /* V5.10: ☆/★トグル(タップしてもページジャンプしない) */
       const st=document.createElement('button');
@@ -2095,7 +2144,7 @@ const PreviewPanel=(() => {
         _favToggle(n);
         _buildGrid();_loadThumbs();_updateTitle(); /* サムネイルはキャッシュ済みのため即時 */
       },{passive:false});
-      item.append(ph,pg,st);
+      item.append(thumbWrap,pg,st); /* V5.20: phは.pv-thumb内 */
       item.addEventListener('click',()=>{App.gotoPage(n,true);_setActive(n);close();},{passive:true});
       grid.appendChild(item);
     }
@@ -2124,9 +2173,18 @@ const PreviewPanel=(() => {
         const n=+ph.dataset.page;
         const url=await _renderThumb(n);
         if(!url||!ph.isConnected||!ov.classList.contains('on'))continue;
+        const wrap=ph.parentElement; /* V5.20: .pv-thumb */
         const img=document.createElement('img');
         img.src=url;img.className='pv-img';img.draggable=false;
         ph.replaceWith(img);
+        if(_detailMode){ /* V5.20: 右下拡大インセットを重ねて表示 */
+          const iurl=await _renderDetailInset(n);
+          if(iurl&&wrap&&wrap.isConnected&&ov.classList.contains('on')){
+            const ins=document.createElement('img');
+            ins.src=iurl;ins.className='pv-inset';ins.draggable=false;
+            wrap.appendChild(ins);
+          }
+        }
       }
       if(i<phs.length&&ov.classList.contains('on'))setTimeout(batch,20);
     }
@@ -2151,6 +2209,14 @@ const PreviewPanel=(() => {
   if(_favBtn)_favBtn.addEventListener('click',()=>{
     _favOnly=!_favOnly;
     _favBtn.classList.toggle('on',_favOnly);
+    _buildGrid();_loadThumbs();
+  },{passive:true});
+
+  /* V5.19: 詳細番号モード切替(グリッド再構築→サムネ再読込で即時反映。ページ送り後もモード保持) */
+  const _detailBtn=document.getElementById('pv-detail-btn');
+  if(_detailBtn)_detailBtn.addEventListener('click',()=>{
+    _detailMode=!_detailMode;
+    _detailBtn.classList.toggle('on',_detailMode);
     _buildGrid();_loadThumbs();
   },{passive:true});
 
