@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>M_Viewer V5.15</title>
+<title>M_Viewer V5.17</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 /* ════════════════════════════════════════════════════════════
-   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.15 (HUD ORANGE)
+   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.17 (HUD ORANGE)
    Design: 近未来計器盤 / ガラス調 / 高コントラスト / 低疲労
    方針: 全セレクタ互換・JS無変更・状態(hover/active/on/disabled/focus)完全分離
    ════════════════════════════════════════════════════════════ */
@@ -1152,6 +1152,10 @@ button{font-family:inherit}
 .more-menu button:hover{border-color:var(--brd-hi);color:var(--tx);background:var(--srf-hov)}
 .more-menu button:active{background:var(--acc-deep);border-color:var(--acc2);color:#ffffff}
 @media(pointer:coarse){.more-menu button{height:48px;font-size:14px}}
+/* V5.17: 入力モード選択 */
+.more-menu .mm-lbl{font-size:10px;color:var(--tx3);letter-spacing:.08em;padding:4px 6px 0;font-weight:700}
+.more-menu .mm-sep{height:1px;background:var(--brd);margin:3px 2px}
+.more-menu button.on{background:var(--acc-deep);border-color:var(--acc2);color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 
 /* ── ページ一覧プレビュー ── */
 #preview-overlay{display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.93);flex-direction:column;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
@@ -1286,23 +1290,27 @@ button{font-family:inherit}
 </div>
 <div id="hdr">
   <div class="hr">
-    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.15</span></span>
+    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.17</span></span>
     <input type="file" id="fileInput" accept="application/pdf" style="display:none">
     <span id="fnlbl">ファイル未選択</span>
     <div class="vs"></div>
+    <!-- V5.16: 設定メニュー(旧その他。復元・説明書を集約) -->
+    <div class="pkw">
+      <button class="btn" id="btn-settings">設定 ▾</button>
+      <div id="more-menu" class="more-menu">
+        <span class="mm-lbl">入力モード</span>
+        <button id="mode-pen" class="mm-mode">✏️ ペンモード</button>
+        <button id="mode-finger" class="mm-mode">✋ 手書きモード</button>
+        <div class="mm-sep"></div>
+        <button id="more-restore">📂 復元（ZIPから）</button>
+        <button id="more-manual">📖 説明書</button>
+      </div>
+    </div>
     <button class="btn" id="btn-undo">戻す</button>
     <button class="btn" id="btn-redo">進む</button>
     <button class="btn" id="btn-save">PDF出力</button><!-- v48: on削除(常時アクティブ解消) -->
     <button class="btn" id="btn-backup" title="ZIP バックアップ">バックアップ</button>
     <input type="file" id="restoreInput" accept=".zip" style="display:none">
-    <!-- v2.42: その他メニュー(復元・説明書を集約) -->
-    <div class="pkw">
-      <button class="btn" id="btn-more">その他 ▾</button>
-      <div id="more-menu" class="more-menu">
-        <button id="more-restore">📂 復元（ZIPから）</button>
-        <button id="more-manual">📖 説明書</button>
-      </div>
-    </div>
     <button class="btn" id="btn-restore" style="display:none">復元</button>
     <button class="btn" id="btn-manual" style="display:none">説明書</button>
     <div class="vs"></div>
@@ -1419,7 +1427,7 @@ button{font-family:inherit}
   </div>
   <div id="dz">
     <div class="dzi">📄</div>
-    <div class="dzm">M_Viewer V5.15</div>
+    <div class="dzm">M_Viewer V5.17</div>
     <div class="dzs">タップして選択 / ドラッグ＆ドロップ<br>ペン・蛍光ペン: Apple Pencil専用<br>その他ツール・スクロール: 指でも操作可<br>2本指でピンチ拡大縮小 (最大800%)</div>
     <button class="dzb" id="dz-open">PDFを開く</button>
   </div>
@@ -1545,7 +1553,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
      2. ファイル名 M_Viewer_vN.html を更新
    それ以外 (meta.json / console / title / dzm / ロゴ左上) は自動反映。
    ============================================================ */
-const APP_VER='V5.15'; /* ← ★ バージョンアップ時はここだけ変える */
+const APP_VER='V5.17'; /* ← ★ バージョンアップ時はここだけ変える */
 
 /* v29: PDF_MAX_DPR を 1.5 → 2.0 に変更
    iPad Retina(DPR=2): canvas物理px = CSS px × 2 = 画面物理px → 完全1:1 → ぼやけ解消
@@ -3092,6 +3100,17 @@ const App=(() => {
   const _toolSizes={...TOOL_DEFAULT_SIZES};
   const _penColors={pen:'#cc2020',hl:'#ffd700'};
 
+  /* V5.17: 入力モード(ペン/手書き)。iPad向け設定。localStorageに永続化 */
+  const _INPUT_MODE_KEY='mv_input_mode';
+  let _inputMode='pen';
+  try{const m=localStorage.getItem(_INPUT_MODE_KEY);if(m==='finger')_inputMode='finger';}catch(_){}
+  function setInputMode(m){
+    _inputMode=(m==='finger')?'finger':'pen';
+    try{localStorage.setItem(_INPUT_MODE_KEY,_inputMode);}catch(_){}
+    document.getElementById('mode-pen')?.classList.toggle('on',_inputMode==='pen');
+    document.getElementById('mode-finger')?.classList.toggle('on',_inputMode==='finger');
+  }
+
   /* 選択コンテキスト */
   let _activeSelSubWin=null;
 
@@ -3334,6 +3353,8 @@ const App=(() => {
     if(e.touches.length>=2){
       /* v27: sub作成中は2本指ピンチをブロック → ドラッグ継続優先 */
       if(_activeTool==='sub'&&isDrawing)return;
+      /* V5.17: 手書きモードで指描画中(pen/hl/eraser)に指が増えても誤ってピンチへ切替えない(ストローク保護) */
+      if(_inputMode==='finger'&&isDrawing&&['pen','hl','eraser'].includes(_activeTool))return;
       const hasSt=Array.from(e.touches).some(t=>t.touchType==='stylus');
       if(hasSt)return; /* v10: Pencil含む場合のみ早期リターン */
       isDrawing=false;curStroke=null;panSt=null;_startPinch(e.touches);return;
@@ -3344,7 +3365,7 @@ const App=(() => {
     if(_activeTool!=='sub'){
       if(Utils.isPalmContact(t))return;
       if(!_isOnCanvas(t)){_startPan(t);return;}
-      const needPen=['pen','hl'].includes(_activeTool);
+      const needPen=['pen','hl'].includes(_activeTool)&&_inputMode!=='finger'; /* V5.17: 手書きモードでは指もそのまま描画対象 */
       if(needPen&&t.touchType!=='stylus'){
         /* v61: 描画中(Pencil使用中)は指パンを完全禁止。
            非描画中でも PEN_PAN_THRESHOLD 分移動後にパン開始(誤反応防止) */
@@ -4208,7 +4229,7 @@ const App=(() => {
     gotoPage,fit,undo,redo,deleteSelected,copySelected,pasteClipboard,closeFile,redraw,loadPDF, /* v44, v2.09 */
     updateUndoRedoBtn:_updateUndoRedoBtn, /* v2.10 */
     saveState,loadState,restore,downloadBackup,restoreFromZip,exportPDF, /* v21: showHome削除 */
-    setTool,setColor,setSize, /* v16: setShape削除 */
+    setTool,setColor,setSize,setInputMode,get inputMode(){return _inputMode;}, /* v16: setShape削除 / V5.17: 入力モード */
     _clipboardSet(arr){_clipboard=arr;showToast('📋 コピーしました');}, /* v44: SubWin用 */
     get currentTool(){return _activeTool;}, /* v16: currentShape削除 */
     get selMode(){return _selMode;},
@@ -5400,7 +5421,7 @@ function showLoading(v){document.getElementById('loading').classList.toggle('on'
   _initCalculator();
   /* v2.42: その他メニュー */
   (function(){
-    const moreBtn=document.getElementById('btn-more');
+    const moreBtn=document.getElementById('btn-settings'); /* V5.16: 設定ボタンへ改称 */
     const moreMenu=document.getElementById('more-menu');
     if(!moreBtn||!moreMenu)return;
     moreBtn.addEventListener('click',e=>{
@@ -5423,6 +5444,10 @@ function showLoading(v){document.getElementById('loading').classList.toggle('on'
       moreMenu.classList.remove('on');
       document.getElementById('btn-manual')?.click?.(); /* 既存ボタンが非表示でもclickイベントは発火する */
     });
+    /* V5.17: 入力モード切替(即時反映・メニューは開いたまま選択状態を確認できるようにする) */
+    document.getElementById('mode-pen').addEventListener('click',()=>App.setInputMode('pen'));
+    document.getElementById('mode-finger').addEventListener('click',()=>App.setInputMode('finger'));
+    App.setInputMode(App.inputMode); /* 起動時: 保存済みモードをボタン表示へ反映 */
   })();
 
   /* 安全タイムアウト: 6秒後に強制解除 */
