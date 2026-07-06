@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-<title>M_Viewer V5.35</title>
+<title>M_Viewer V5.38</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 /* ════════════════════════════════════════════════════════════
-   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.35 (HUD ORANGE)
+   M_Viewer — AERO-GRADE PROFESSIONAL THEME  V5.38 (HUD ORANGE・画面表示診断版)
    Design: 近未来計器盤 / ガラス調 / 高コントラスト / 低疲労
    方針: 全セレクタ互換・JS無変更・状態(hover/active/on/disabled/focus)完全分離
    ════════════════════════════════════════════════════════════ */
@@ -1289,6 +1289,7 @@ button{font-family:inherit}
 #lg,.dzm{letter-spacing:.1em}
 #zlbl,#pgn,.srch-cnt,.srch-li-pg{font-family:var(--mono)}
 .hr .btn{letter-spacing:.04em}
+#hiResDebugPanel{position:fixed;right:8px;bottom:8px;z-index:99999;background:rgba(0,0,0,.82);color:#0f0;font-family:monospace;font-size:11px;line-height:1.5;padding:8px 10px;border-radius:8px;pointer-events:none;white-space:pre;max-width:70vw;box-shadow:0 2px 12px rgba(0,0,0,.6);}
 </style>
 </head>
 <body>
@@ -1307,7 +1308,7 @@ button{font-family:inherit}
 </div>
 <div id="hdr">
   <div class="hr">
-    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.35</span></span>
+    <span class="logo" id="logo-ver">M_Viewer <span style="font-size:10px">V5.38</span></span>
     <input type="file" id="fileInput" accept="application/pdf" style="display:none">
     <span id="fnlbl">ファイル未選択</span>
     <div class="vs"></div>
@@ -1444,7 +1445,7 @@ button{font-family:inherit}
   </div>
   <div id="dz">
     <div class="dzi">📄</div>
-    <div class="dzm">M_Viewer V5.35</div>
+    <div class="dzm">M_Viewer V5.38</div>
     <div class="dzs">タップして選択 / ドラッグ＆ドロップ<br>ペン・蛍光ペン: Apple Pencil専用<br>その他ツール・スクロール: 指でも操作可<br>2本指でピンチ拡大縮小 (最大800%)</div>
     <button class="dzb" id="dz-open">PDFを開く</button>
   </div>
@@ -1576,7 +1577,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
      2. ファイル名 M_Viewer_vN.html を更新
    それ以外 (meta.json / console / title / dzm / ロゴ左上) は自動反映。
    ============================================================ */
-const APP_VER='V5.35'; /* ← ★ バージョンアップ時はここだけ変える */
+const APP_VER='V5.38'; /* ← ★ バージョンアップ時はここだけ変える */
 
 /* v29: PDF_MAX_DPR を 1.5 → 2.0 に変更
    iPad Retina(DPR=2): canvas物理px = CSS px × 2 = 画面物理px → 完全1:1 → ぼやけ解消
@@ -1635,6 +1636,43 @@ const PdfRenderCore=(() => {
    そのまま_currentVPの基準として再利用できる。 */
 const HiResView=(() => {
   let cvs=null,ver=0,task=null;
+  /* ===== V5.36診断用(ログ・カウンタのみ追加。既存ロジック・条件分岐は無変更) ===== */
+  let _dbgHideCount=0,_dbgShowCount=0,_dbgLastShowAt=null,_dbgDurations=[];
+  let _dbgHideByLabel={}; /* V5.37診断: 呼び出し元ラベル別カウント */
+  function _dbgPanelUpdate(){
+    /* V5.38診断: Consoleが使えない端末(iPad等)向けに、画面上へ直接表示する */
+    const el=document.getElementById('hiResDebugPanel');if(!el)return;
+    const avg=_dbgDurations.length?(_dbgDurations.reduce((a,b)=>a+b,0)/_dbgDurations.length).toFixed(1):'-';
+    const ranking=Object.entries(_dbgHideByLabel).sort((a,b)=>b[1]-a[1]);
+    let txt='HiResDebug\nhide='+_dbgHideCount+' / show='+_dbgShowCount+' / 平均'+avg+'ms\n--- hide内訳 ---\n';
+    if(ranking.length){
+      ranking.forEach(([label,cnt])=>{txt+=label+': '+cnt+'\n';});
+    }else{
+      txt+='(まだhide発生なし)\n';
+    }
+    if(_dbgHideCount>0&&_dbgShowCount>0&&_dbgHideCount>_dbgShowCount*3){
+      txt+='⚠ hide>>show (ほぼ表示されていない)';
+    }
+    el.textContent=txt;
+  }
+  function _dbgSummary(){
+    const avg=_dbgDurations.length?(_dbgDurations.reduce((a,b)=>a+b,0)/_dbgDurations.length).toFixed(1):'-';
+    console.log('%c[HiResDebug] ==== 集計 ==== hide回数='+_dbgHideCount+' / display回数='+_dbgShowCount+' / 平均(renderVisible開始→display:block)='+avg+'ms','color:#0af;font-weight:bold');
+    /* V5.37診断: 呼び出し元ランキング */
+    const ranking=Object.entries(_dbgHideByLabel).sort((a,b)=>b[1]-a[1]);
+    console.log('%c[HiResDebug] ==== hide()呼び出し元ランキング ====','color:#fa0;font-weight:bold');
+    ranking.forEach(([label,cnt],i)=>{
+      console.log('  '+(i+1)+'位: '+label.padEnd(14,'　')+' '+cnt+'回');
+    });
+    _dbgPanelUpdate(); /* V5.38: 画面上パネルにも反映 */
+    if(_dbgHideCount>0&&_dbgShowCount>0&&_dbgHideCount>_dbgShowCount*3){
+      console.log('%c[HiResDebug] 結論: hide回数(' +_dbgHideCount+ ') >> display回数(' +_dbgShowCount+ ') → HiResViewはほぼ表示されていないと判断できます','color:red;font-weight:bold;font-size:14px');
+    }else if(_dbgShowCount>0){
+      console.log('%c[HiResDebug] hide回数とdisplay回数の比率は3倍未満です(このしきい値では「ほぼ表示されていない」とは言えません)','color:#0a0');
+    }
+  }
+  window.__hiResDebugSummary=_dbgSummary; /* コンソールから手動実行: __hiResDebugSummary() */
+  /* ===== 診断用ここまで ===== */
   function _ensure(cwEl){
     if(cvs)return cvs;
     cvs=document.createElement('canvas');
@@ -1643,12 +1681,28 @@ const HiResView=(() => {
     cwEl.insertBefore(cvs,cwEl.querySelector('#pdfCvs').nextSibling); /* pdfCvsの直後(annCvsより手前) */
     return cvs;
   }
-  function hide(){if(cvs)cvs.style.display='none';}
+  function hide(label){
+    /* V5.37診断: 呼び出し元ラベル別カウント追加(labelは引数追加のみ・既存ロジックは無変更) */
+    label=label||'(不明)';
+    if(!_dbgHideByLabel[label])_dbgHideByLabel[label]=0;
+    _dbgHideByLabel[label]++;
+    if(cvs&&cvs.style.display==='block'&&_dbgLastShowAt!==null){
+      const dur=performance.now()-_dbgLastShowAt;
+      console.log('[HiResDebug] display継続時間='+dur.toFixed(1)+'ms （このタイミングでhideされる。呼び出し元='+label+'）');
+      _dbgLastShowAt=null;
+    }
+    _dbgHideCount++;
+    console.log('[HiResDebug] hide() call #'+_dbgHideCount+' 呼び出し元=['+label+'] at '+performance.now().toFixed(1)+'ms');
+    _dbgPanelUpdate(); /* V5.38: 画面上パネルにも反映(Consoleが見れない端末向け) */
+    if(cvs)cvs.style.display='none';
+  }
   function cancel(){ver++;if(task){try{task.cancel();}catch(_){}task=null;}}
   /* rectRS: {x1,y1,x2,y2} = #cw座標系(=renderScale基準のcanvas-pixel)でのクロップ範囲
      rectS1: 同範囲をscale=1基準(canvas-pixel-at-scale1)で表したもの(offsetX/Y計算用)
      hiScale: 実際にレンダリングする倍率(= 現在のユーザー倍率×DPR) */
   async function renderVisible(cwEl,page,rectRS,rectS1,hiScale){
+    const _dbgT0=performance.now(); /* V5.36診断: 開始時刻 */
+    console.log('[HiResDebug] renderVisible() 開始 at '+_dbgT0.toFixed(1)+'ms');
     const myVer=++ver;
     const c=_ensure(cwEl);
     /* CSS表示サイズ(#cw座標系=renderScale基準。祖先#cwのscale(cssExtraZoom)で最終的に正しいサイズへ伸びる) */
@@ -1663,8 +1717,18 @@ const HiResView=(() => {
       scale:hiScale,offsetX:-rectS1.x1*hiScale,offsetY:-rectS1.y1*hiScale
     },c,task,{w:rasterW,h:rasterH});
     task=res.task;
-    if(res.cancelled||myVer!==ver)return false;
+    if(res.cancelled||myVer!==ver){
+      console.log('[HiResDebug] renderVisible() キャンセル/破棄 at '+performance.now().toFixed(1)+'ms (cancelled='+res.cancelled+', verMismatch='+(myVer!==ver)+')'); /* V5.36診断 */
+      return false;
+    }
     c.style.display='block';
+    /* V5.36診断: display=block確定・所要時間記録・カウント */
+    const _dbgT1=performance.now();
+    _dbgShowCount++;
+    _dbgDurations.push(_dbgT1-_dbgT0);
+    _dbgLastShowAt=_dbgT1;
+    console.log('%c[HiResDebug] display=block #'+_dbgShowCount+' at '+_dbgT1.toFixed(1)+'ms (renderVisible開始から'+(_dbgT1-_dbgT0).toFixed(1)+'ms)','color:#0a0;font-weight:bold');
+    _dbgSummary();
     return true;
   }
   return{hide,cancel,renderVisible};
@@ -3444,7 +3508,7 @@ const App=(() => {
   async function renderPage(num){
     if(!Logger.flags.pdfRender)return;
     if(!pdfDoc)return;
-    HiResView.hide(); /* V5.31: 描画やり直し中は古い高解像度オーバーレイを隠す */
+    HiResView.hide('renderPage'); /* V5.31: 描画やり直し中は古い高解像度オーバーレイを隠す */
     if(Logger.on)Logger.debug('[renderPage] page='+num+' scale='+scale.toFixed(3)+' dpr='+(window.devicePixelRatio||1).toFixed(2));
     const ver=++renderVer;
 
@@ -3535,7 +3599,7 @@ const App=(() => {
        繰り返し見つかったため、判定自体をやめて「ズーム操作の一段落後は必ず実行する」方式に
        変更する。実行はジェスチャー終了時の1回だけなので、常時実行しても操作の軽快さには
        影響しない(パン/ピンチ中に毎フレーム走るわけではない)。 */
-    if(scale<=1.0){HiResView.hide();return;} /* 等倍以下は元々鮮明なため対象外 */
+    if(scale<=1.0){HiResView.hide('scale<=1');return;} /* 等倍以下は元々鮮明なため対象外 */
     const myPage=curPage,myScale=scale;
     let page=_pageCache.get(myPage);
     if(!page)page=await pdfDoc.getPage(myPage);
@@ -3549,14 +3613,14 @@ const App=(() => {
     const cx2=(dX2-panX)/cssExtraZoom/renderScale,cy2=(dY2-panY)/cssExtraZoom/renderScale;
     const s1x1=Math.max(0,Math.min(cx1,cx2)),s1y1=Math.max(0,Math.min(cy1,cy2));
     const s1x2=Math.min(vp1.width,Math.max(cx1,cx2)),s1y2=Math.min(vp1.height,Math.max(cy1,cy2));
-    if(s1x2-s1x1<=0||s1y2-s1y1<=0){HiResView.hide();return;} /* ページ範囲外 */
+    if(s1x2-s1x1<=0||s1y2-s1y1<=0){HiResView.hide('page外');return;} /* ページ範囲外 */
     const dpr=Math.min(window.devicePixelRatio||1,PDF_MAX_DPR);
     const hiScale=myScale*dpr; /* CSS拡大に頼らず必要な実解像度そのもので描画 */
     /* #cw座標系(renderScale基準)でのクロップ範囲(HiResView配置用) */
     const rectRS={x1:s1x1*renderScale,y1:s1y1*renderScale,x2:s1x2*renderScale,y2:s1y2*renderScale};
     const rectS1={x1:s1x1,y1:s1y1,x2:s1x2,y2:s1y2}; /* V5.32: x2/y2追加(実ラスタサイズ算出用) */
     const ok=await HiResView.renderVisible(cwEl,page,rectRS,rectS1,hiScale);
-    if(ok&&(curPage!==myPage||scale!==myScale))HiResView.hide(); /* 描画完了までに状態が変わっていれば破棄 */
+    if(ok&&(curPage!==myPage||scale!==myScale))HiResView.hide('描画後状態変更'); /* 描画完了までに状態が変わっていれば破棄 */
   }
 
   /* --- 選択 --- */
@@ -3780,7 +3844,7 @@ const App=(() => {
   caEl.addEventListener('wheel',e=>{
     if(!Logger.flags.wheelZoom){e.preventDefault();return;}
     if(!pdfDoc)return;e.preventDefault();
-    HiResView.hide(); /* V5.31: ホイール操作中は既存のCSS拡大表示に戻す */
+    HiResView.hide('wheel'); /* V5.31: ホイール操作中は既存のCSS拡大表示に戻す */
     const k=e.deltaMode===1?16:e.deltaMode===2?caEl.clientHeight:1; /* 行/ページ単位ホイール対応 */
     if(IS_PC&&!(e.ctrlKey||e.metaKey)){
       /* V5.13①: ホイール=縦スクロール / Shift+ホイール=横スクロール */
@@ -3839,7 +3903,7 @@ const App=(() => {
   function _pinchMid(t){return{x:(t[0].clientX+t[1].clientX)/2,y:(t[0].clientY+t[1].clientY)/2};}
   function _startPinch(t){const m=_pinchMid(t),cr=caEl.getBoundingClientRect(),bx=m.x-cr.left,by=m.y-cr.top;cwEl.style.transformOrigin='0 0';/* v17: 先に確定 */pinch={d0:_pinchDist(t),s0:scale,target:scale,pdfX:(bx-panX)/scale,pdfY:(by-panY)/scale,cr};}
   function _movePinch(t){
-    HiResView.hide(); /* V5.31: ピンチ中は既存のCSS拡大表示に戻す(高解像度描画はしない) */
+    HiResView.hide('_movePinch'); /* V5.31: ピンチ中は既存のCSS拡大表示に戻す(高解像度描画はしない) */
     const p=pinch,rawR=_pinchDist(t)/p.d0,m=_pinchMid(t);
     const cr=p.cr||(p.cr=caEl.getBoundingClientRect()); /* v10: rect キャッシュ */
     const M1x=m.x-cr.left,M1y=m.y-cr.top;
@@ -3870,7 +3934,7 @@ const App=(() => {
   function _startPan(t){panSt={x0:t.clientX,y0:t.clientY,px0:panX,py0:panY};velHist=[];}
   function _movePan(t){
     if(!panSt)return;
-    HiResView.hide(); /* V5.31: パン中は既存のCSS transform表示に戻す(高解像度描画はしない) */
+    HiResView.hide('_movePan'); /* V5.31: パン中は既存のCSS transform表示に戻す(高解像度描画はしない) */
     velHist.push({x:t.clientX,y:t.clientY,tm:Date.now()});if(velHist.length>6)velHist.shift();
     panX=panSt.px0+(t.clientX-panSt.x0);panY=panSt.py0+(t.clientY-panSt.y0);
     _clampPan(); /* 値クランプのみ (DOM更新はRAF) */
@@ -6510,5 +6574,6 @@ const TextSearch = (() => {
  */
 
 </script>
+<div id="hiResDebugPanel">HiResDebug: 起動待ち…</div>
 </body>
 </html>
